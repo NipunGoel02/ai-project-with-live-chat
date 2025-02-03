@@ -2,6 +2,7 @@ import userModel from '../models/user.model.js';
 import * as userService from '../services/user.service.js';
 import { validationResult } from 'express-validator';
 import redisClient from '../services/redis.service.js';
+import bcrypt from 'bcrypt'
 
 
 export const createUserController = async (req, res) => {
@@ -15,8 +16,6 @@ export const createUserController = async (req, res) => {
         const user = await userService.createUser(req.body);
 
         const token = await user.generateJWT();
-
-        delete user._doc.password;
 
         res.status(201).json({ user, token });
     } catch (error) {
@@ -39,21 +38,18 @@ export const loginController = async (req, res) => {
 
         if (!user) {
             return res.status(401).json({
-                errors: 'Invalid credentials'
+                errors: 'Invalid credentialsfdgfghh'
             })
         }
 
-        const isMatch = await user.isValidPassword(password);
+const isMatch = await bcrypt.compare(password, user.password);
 
-        if (!isMatch) {
-            return res.status(401).json({
-                errors: 'Invalid credentials'
-            })
-        }
-
+if (!isMatch) {
+    return res.status(401).json({
+        errors: 'Invalid credentials'
+    })
+}
         const token = await user.generateJWT();
-
-        delete user._doc.password;
 
         res.status(200).json({ user, token });
 

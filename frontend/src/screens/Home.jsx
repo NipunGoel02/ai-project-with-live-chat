@@ -1,102 +1,99 @@
-import React, { useContext, useState, useEffect } from 'react'
-import { UserContext } from '../context/user.context'
-import axios from "../config/axios"
-import { useNavigate } from 'react-router-dom'
 
-const Home = () => {
+import React, { useState } from 'react';
+import { useContext , useEffect} from 'react';
+import { UserContext } from '../context/user.context';
+import axios from '../config/axios.js';
+import { useNavigate } from 'react-router-dom';
 
-    const { user } = useContext(UserContext)
-    const [ isModalOpen, setIsModalOpen ] = useState(false)
-    const [ projectName, setProjectName ] = useState(null)
-    const [ project, setProject ] = useState([])
+import axiosInstance from '../config/axios.js';
+function Home() {
+  const { user } = useContext(UserContext);
+  const [ismodalopen, setModalOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [projects, setProjects] = useState([]);
+  useEffect(() => {
+    axios.get('/projects/all').then(function(response){
+      console.log(response.data);
+      setProjects(response.data.projects);
+    }).catch(function(error){
+      console.log(error);
 
-    const navigate = useNavigate()
+    })
+  })
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log(name);
+    axios.post('/projects/create' , {
+      name : name,
 
-    function createProject(e) {
-        e.preventDefault()
-        console.log({ projectName })
-
-        axios.post('/projects/create', {
-            name: projectName,
-        })
-            .then((res) => {
-                console.log(res)
-                setIsModalOpen(false)
-            })
-            .catch((error) => {
-                console.log(error)
-            })
-    }
-
-    useEffect(() => {
-        axios.get('/projects/all').then((res) => {
-            setProject(res.data.projects)
-
-        }).catch(err => {
-            console.log(err)
-        })
-
-    }, [])
-
-    return (
-        <main className='p-4'>
-            <div className="projects flex flex-wrap gap-3">
-                <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="project p-4 border border-slate-300 rounded-md">
-                    New Project
-                    <i className="ri-link ml-2"></i>
-                </button>
-
-                {
-                    project.map((project) => (
-                        <div key={project._id}
-                            onClick={() => {
-                                navigate(`/project`, {
-                                    state: { project }
-                                })
-                            }}
-                            className="project flex flex-col gap-2 cursor-pointer p-4 border border-slate-300 rounded-md min-w-52 hover:bg-slate-200">
-                            <h2
-                                className='font-semibold'
-                            >{project.name}</h2>
-
-                            <div className="flex gap-2">
-                                <p> <small> <i className="ri-user-line"></i> Collaborators</small> :</p>
-                                {project.users.length}
-                            </div>
-
-                        </div>
-                    ))
-                }
+    }).then((res) => {}).catch((err) =>{
+      console.log(err);
+    });
+    setName('');
+    setModalOpen(false);
+  };
+   const navigate = useNavigate();
+  return (
+    <main className='p-4'>
+      <div className='projects flex gap-4'>
+      <div className="project  ">
+  <button 
+    className="bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-4 rounded-lg border border-gray-700"
+    onClick={() => setModalOpen(true)}
+  >
+    New Project
+    <i className="ri-add-large-line"></i  >
+  
+  </button>
+       
+      </div>
+      <div className="project flex-col cursor-pointer">
+  {projects.map((project) => (
+    <button
+      key={project.id} // Ensure 'id' is correctly accessed from your data structure
+      className="bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-4 rounded-lg border border-gray-700 flex flex-col justify-center items-center"
+      onClick={() => navigate(`/project`, { state: { project } })} // Pass an individual project
+    >
+      <h2 className="text-lg">{project.name}</h2>
+      <div className="text-sm">{project.users.length} Users</div>
+    </button>
+  ))}
+</div>
 
 
-            </div>
+</div>
 
-            {isModalOpen && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="bg-white p-6 rounded-md shadow-md w-1/3">
-                        <h2 className="text-xl mb-4">Create New Project</h2>
-                        <form onSubmit={createProject}>
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700">Project Name</label>
-                                <input
-                                    onChange={(e) => setProjectName(e.target.value)}
-                                    value={projectName}
-                                    type="text" className="mt-1 block w-full p-2 border border-gray-300 rounded-md" required />
-                            </div>
-                            <div className="flex justify-end">
-                                <button type="button" className="mr-2 px-4 py-2 bg-gray-300 rounded-md" onClick={() => setIsModalOpen(false)}>Cancel</button>
-                                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md">Create</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-
-        </main>
-    )
+      {ismodalopen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white rounded-lg p-4 w-1/2">
+            <h2 className="text-lg font-bold mb-4">Add New Project</h2>
+            <form onSubmit={handleSubmit}>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full p-2 border border-gray-400 rounded-lg mb-4"
+                placeholder="Enter project name"
+              />
+              <button
+                type="submit"
+                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg"
+              >
+                Add Project
+              </button>
+              <button
+                type="button"
+                onClick={() => setModalOpen(false)}
+                className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg ml-4"
+              >
+                Cancel
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+    </main>
+  );
 }
 
-export default Home
+export default Home;
